@@ -8,7 +8,7 @@ WeatherAPI.com account (free tier: 1M calls/month)
 Git (optional, for version control)
 
 
-3. Configure Application
+Configure Application
 Edit src/main/resources/application.yml:
 
 yaml
