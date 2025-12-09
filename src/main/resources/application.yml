@@ -1,0 +1,17 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: RealTimeWeather
+  thymeleaf:
+    cache: false
+
+app:
+  weatherapi:
+    api-key: "f925844f50a642c1ac2144206250912" 
+    base-url: http://api.weatherapi.com/v1
+
+logging:
+  level:
+    com.example.weather: DEBUG

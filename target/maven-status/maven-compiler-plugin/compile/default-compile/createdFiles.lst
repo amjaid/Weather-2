@@ -1,0 +1,12 @@
+com\example\weather\WeatherApplication.class
+com\example\weather\dto\GeocodingResponse.class
+com\example\weather\service\WeatherService.class
+com\example\weather\dto\WeatherApiResponse$Astro.class
+com\example\weather\dto\WeatherApiResponse.class
+com\example\weather\dto\WeatherApiResponse$Condition.class
+com\example\weather\dto\WeatherApiResponse$Forecast.class
+com\example\weather\controller\WeatherController.class
+com\example\weather\dto\WeatherApiResponse$Current.class
+com\example\weather\model\WeatherResult.class
+com\example\weather\dto\WeatherApiResponse$Location.class
+com\example\weather\dto\WeatherApiResponse$ForecastDay.class
