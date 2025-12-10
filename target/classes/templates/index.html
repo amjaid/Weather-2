@@ -1,254 +1,384 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="[http://www.thymeleaf.org](http://www.thymeleaf.org)">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Real-Time Weather & Sun Times</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="[https://fonts.googleapis.com](https://fonts.googleapis.com)">
+    <link href="[https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap)" rel="stylesheet">
+    <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css)">
+    
     <style>
+        /* =========================================
+           1. DESIGN TOKENS & VARIABLES
+           ========================================= */
+        :root {
+            /* Glassmorphism Configuration */
+            --glass-bg: rgba(255, 255, 255, 0.2);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            --glass-blur: 20px;
+            
+            /* Text Colors */
+            --text-main: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.85);
+            
+            /* Animation Curves */
+            --ease-elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* =========================================
+           2. GLOBAL RESET & BODY ANIMATION
+           ========================================= */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            font-family: 'Inter', sans-serif;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
-            color: #333;
+            color: var(--text-main);
+            overflow-x: hidden;
+            
+            /* Infinite Atmospheric Gradient */
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientDrift 15s ease infinite;
         }
-        
-        .container {
+
+        /* Dynamic Backgrounds based on Thymeleaf State */
+        body.SUNNY { background: linear-gradient(-45deg, #2980b9, #6dd5fa, #ffffff); }
+        body.NIGHT { background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364); }
+        body.RAINY { background: linear-gradient(-45deg, #373B44, #4286f4); }
+
+        @keyframes gradientDrift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* =========================================
+           3. GLASS CARD ARCHITECTURE
+           ========================================= */
+       .glass-container {
             width: 100%;
             max-width: 500px;
-        }
-        
-        .card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-        }
-        
-        .card-header {
-            background: linear-gradient(135deg, #2c3e50, #4a6491);
-            color: white;
-            padding: 30px 20px;
-            text-align: center;
-        }
-        
-        .card-header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        
-        .card-header p {
-            opacity: 0.9;
-            font-size: 16px;
-        }
-        
-        .card-body {
-            padding: 30px;
-        }
-        
-        .form-group {
-            margin-bottom: 25px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .input-with-icon {
+            background: var(--glass-bg);
+            /* The Core Glass Effect */
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--glass-shadow);
+            padding: 2.5rem;
             position: relative;
+            overflow: hidden; /* Contains the blur */
+            transition: transform 0.3s ease;
         }
-        
-        .input-with-icon i {
+
+        /* subtle hover lift */
+       .glass-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        /* =========================================
+           4. TYPOGRAPHY & HEADER
+           ========================================= */
+       .app-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+       .app-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+       .app-header p {
+            color: var(--text-secondary);
+            font-weight: 300;
+            font-size: 1rem;
+        }
+
+        /* =========================================
+           5. INTERACTIVE FORM (KINETIC UI)
+           ========================================= */
+       .search-wrapper {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+       .input-group {
+            position: relative;
+            width: 100%;
+        }
+
+       .search-icon {
             position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #4a6491;
+            left: 0;
+            bottom: 15px;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            transition: color 0.3s ease;
         }
-        
+
+        /* Transparent Input */
         input[type="text"] {
             width: 100%;
-            padding: 15px 15px 15px 45px;
-            border: 2px solid #e1e5e9;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s;
-            background: white;
-        }
-        
-        input[type="text"]:focus {
+            padding: 12px 12px 12px 35px;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 500;
             outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Animated Expanding Underline */
+       .focus-border {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #fff;
+            transform: scaleX(0);
+            transform-origin: center;
+            transition: transform 0.4s var(--ease-elastic);
+        }
+
+        input[type="text"]:focus ~.focus-border {
+            transform: scaleX(1);
         }
         
+        input[type="text"]:focus ~.search-icon {
+            color: #fff;
+        }
+
+        /* Glass Button */
         button {
             width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #3498db, #2980b9);
+            margin-top: 1.5rem;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
             color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s var(--ease-smooth);
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
         }
-        
+
         button:hover {
+            background: rgba(255, 255, 255, 0.4);
             transform: translateY(-2px);
-            box-shadow: 0 7px 14px rgba(52, 152, 219, 0.3);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
-        
-        .error {
-            background-color: #fee;
-            color: #c33;
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* =========================================
+           6. FEEDBACK & ERROR STATES
+           ========================================= */
+       .error-message {
+            background: rgba(255, 82, 82, 0.2);
+            border-left: 4px solid #ff5252;
             padding: 15px;
-            border-radius: 10px;
+            border-radius: 8px;
             margin-bottom: 20px;
-            border-left: 4px solid #c33;
             display: flex;
             align-items: center;
             gap: 10px;
+            animation: shake 0.5s var(--ease-elastic);
+            backdrop-filter: blur(5px);
         }
-        
-        .popular-cities {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
-        
-        .popular-cities h3 {
-            color: #2c3e50;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 16px;
+
+        /* =========================================
+           7. POPULAR CITIES (CHIPS)
+           ========================================= */
+       .popular-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
         }
-        
-        .cities-grid {
+
+       .popular-section h3 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            margin-bottom: 1rem;
+        }
+
+       .cities-grid {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
         }
-        
-        .city-chip {
-            background: #f8f9fa;
-            border: 1px solid #e1e5e9;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 14px;
+
+       .city-chip {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 0.9rem;
             cursor: pointer;
-            transition: all 0.2s;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
         }
-        
-        .city-chip:hover {
-            background: #3498db;
-            color: white;
-            border-color: #3498db;
+
+       .city-chip:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
         }
-        
-        footer {
+
+        /* =========================================
+           8. WEATHER RESULT VIEW (NEW SECTION)
+           ========================================= */
+       .weather-result {
             text-align: center;
-            margin-top: 25px;
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 14px;
+            margin-bottom: 2rem;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+       .main-temp {
+            font-size: 4rem;
+            font-weight: 700;
+            margin: 10px 0;
+            letter-spacing: -2px;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Floating Icon Animation */
+       .weather-icon-large {
+            font-size: 4rem;
+            margin: 10px 0;
+            animation: floater 4s ease-in-out infinite;
+        }
+
+        @keyframes floater {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        footer {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.8rem;
+            opacity: 0.7;
         }
         
-        footer a {
-            color: white;
-            text-decoration: none;
-        }
-        
+        footer a { color: white; text-decoration: underline; }
+
+        /* Mobile Optimization */
         @media (max-width: 480px) {
-            .card-body {
-                padding: 20px;
-            }
-            
-            .card-header {
-                padding: 20px 15px;
-            }
-            
-            .card-header h1 {
-                font-size: 24px;
+           .glass-container {
+                border-radius: 0;
+                height: 100vh;
+                max-width: 100%;
+                border: none;
+                padding: 1.5rem;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
             }
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="card">
-            <div class="card-header">
-                <h1><i class="fas fa-sun"></i> Sun Tracker</h1>
-                <p>Get real-time sunrise & sunset times for any city worldwide</p>
+
+<body th:classappend="${weather!= null? weather.weatherState : ''}">
+
+    <div class="glass-container">
+        
+        <div class="app-header">
+            <h1><i class="fas fa-sun"></i> Sun Tracker</h1>
+            <p>Real-time atmospheric conditions</p>
+        </div>
+        
+        <form th:action="@{/search}" method="post" id="weatherForm">
+            <div class="search-wrapper">
+                <div class="input-group">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" 
+                           id="city" 
+                           name="city" 
+                           placeholder="Search city (e.g. Tokyo)" 
+                           autocomplete="off" 
+                           required>
+                    <span class="focus-border"></span>
+                </div>
             </div>
-            
-            <div class="card-body">
-                <form th:action="@{/search}" method="post" id="weatherForm">
-                    <div class="form-group">
-                        <label for="city"><i class="fas fa-map-marker-alt"></i> Enter City Name</label>
-                        <div class="input-with-icon">
-                            <i class="fas fa-search"></i>
-                            <input type="text" 
-                                id="city" 
-                                name="city" 
-                                placeholder="e.g., Kuala Lumpur, Malaysia or London, UK" 
-                                required
-                                autocomplete="off"
-                                autofocus>
-                        </div>
-                    </div>
-                    
-                    <div th:if="${error}" class="error">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <span th:text="${error}"></span>
-                    </div>
-                    
-                    <button type="submit">
-                        <i class="fas fa-cloud-sun"></i> Get Sun Times
-                    </button>
-                </form>
-                
-                <div class="popular-cities">
-                    <h3><i class="fas fa-globe-americas"></i> Popular Cities</h3>
-                    <div class="cities-grid">
-                        <div class="city-chip" th:each="city : ${popularCities}" 
-                             onclick="document.getElementById('city').value = this.textContent; document.getElementById('weatherForm').submit();"
-                             th:text="${city}"></div>
-                    </div>
+
+            <div th:if="${error}" class="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                <span th:text="${error}">Error message goes here</span>
+            </div>
+
+            <button type="submit">
+                <span>Check Weather</span>
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </form>
+
+        <div th:if="${weather!= null}" class="weather-result">
+            <div class="weather-icon-large">
+                <i class="fas fa-cloud-sun"></i>
+            </div>
+            <h2 class="main-temp" th:text="${weather.temp} + '°'">24°</h2>
+            <p th:text="${weather.description}">Partly Cloudy</p>
+            <p th:text="${#temporals.format(weather.date, 'EEEE, MMM d')}">Monday, Oct 12</p>
+        </div>
+
+        <div class="popular-section">
+            <h3>Popular Locations</h3>
+            <div class="cities-grid">
+                <div class="city-chip" th:each="city : ${popularCities}" 
+                     onclick="document.getElementById('city').value = this.textContent; document.getElementById('weatherForm').submit();"
+                     th:text="${city}">
+                     New York
                 </div>
             </div>
         </div>
-        
+
         <footer>
-            <p>Powered by <a href="https://openweathermap.org" target="_blank">OpenWeatherMap</a> • Real-time data</p>
+            <p>Powered by <a href="[https://openweathermap.org](https://openweathermap.org)" target="_blank">OpenWeatherMap</a></p>
         </footer>
     </div>
+
 </body>
 </html>
